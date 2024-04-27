@@ -1,5 +1,6 @@
 #custom
 compile_commands.json
+.cache/*
 # Prerequisites
 *.d
 
