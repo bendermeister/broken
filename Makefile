@@ -10,3 +10,11 @@ example/%.out: example/%.c
 
 clean:
 	rm -f ${EXAMPLES}
+
+INSTALL_DIR := /usr/local/include
+
+install:
+	cp -r include/broken ${INSTALL_DIR}
+
+uninstall:
+	rm -rf ${INCLUDE_DIR}/broken
