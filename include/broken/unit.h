@@ -34,7 +34,7 @@ struct test_record_t {
   uint32_t line_number;
 };
 
-// TODO: do we have to check malloc?
+// TODO(ben): do we have to check malloc?
 
 typedef struct test_t test_t;
 struct test_t {
@@ -66,9 +66,12 @@ static test_record_t *test_records_more(test_t test[static 1]) {
   if (test->records.length >= test->records.capacity) {
     test->records.capacity += 1;
     test->records.capacity <<= 1;
-    test->records.buffer =
-        realloc(test->records.buffer,
-                test->records.capacity * sizeof(*test->records.buffer));
+    void *ptr = realloc(test->records.buffer,
+                        test->records.capacity * sizeof(*test->records.buffer));
+    if (!ptr) {
+      return NULL;
+    }
+    test->records.buffer = ptr;
   }
   test_record_t *record = &test->records.buffer[test->records.length];
   test->records.length += 1;
@@ -174,10 +177,13 @@ __attribute_maybe_unused__ static char *test_internal_make_str(void) {
   if (test_str_factory.to_free.length >= test_str_factory.to_free.capacity) {
     test_str_factory.to_free.capacity += 1;
     test_str_factory.to_free.capacity <<= 1;
-    test_str_factory.to_free.buffer =
-        realloc(test_str_factory.to_free.buffer,
-                test_str_factory.to_free.capacity *
-                    sizeof(*test_str_factory.to_free.buffer));
+    void *ptr = realloc(test_str_factory.to_free.buffer,
+                        test_str_factory.to_free.capacity *
+                            sizeof(*test_str_factory.to_free.buffer));
+    if (!ptr) {
+      return NULL;
+    }
+    test_str_factory.to_free.buffer = ptr;
   }
 
   char *str = malloc(strlen(test_str_factory.buffer) + 1);
@@ -195,19 +201,21 @@ __attribute_maybe_unused__ static char *test_internal_make_str(void) {
 
 __attribute_maybe_unused__ static void test_analyze(test_t test[static 1]) {
   printf("%s:", test->name);
+
+  // test passed
   if (test->failed == 0) {
     printf("\t\t[SUCCESS]\n");
     return;
-  } else {
-    printf("\t\t[FAILED]\n");
   }
+
+  // test failed
+  printf("\t\t[FAILED]\n");
   for (uint32_t i = 0; i < test->records.length; i += 1) {
     printf("\tline: %d:\n", test->records.buffer[i].line_number);
     switch (test->records.buffer[i].type) {
     case TEST_VALUE_BOOL:
       printf("\t\tgotten: %d\n", test->records.buffer[i].gotten.as_bool);
       printf("\t\texpected: %d\n", test->records.buffer[i].expected.as_bool);
-
       break;
     case TEST_VALUE_INT:
       printf("\t\tgotten: %ld\n", test->records.buffer[i].gotten.as_int);
@@ -240,4 +248,4 @@ __attribute_maybe_unused__ static void TEST_CLEANUP(void) {
   free(test_str_factory.to_free.buffer);
 }
 
-#endif // BORKEN_UNIT_H_
+#endif // BROKEN_UNIT_H
