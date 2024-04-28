@@ -34,8 +34,6 @@ struct test_record_t {
   uint32_t line_number;
 };
 
-// TODO(ben): do we have to check malloc?
-
 typedef struct test_t test_t;
 struct test_t {
   char *name;
@@ -48,6 +46,8 @@ struct test_t {
   uint32_t passed;
   uint32_t failed;
 };
+
+static int test_status = 0;
 
 #define TEST_MAKE(...)                                                         \
   ({                                                                           \
@@ -208,6 +208,8 @@ __attribute_maybe_unused__ static void test_analyze(test_t test[static 1]) {
     return;
   }
 
+  test_status = EXIT_FAILURE;
+
   // test failed
   printf("\t\t[FAILED]\n");
   for (uint32_t i = 0; i < test->records.length; i += 1) {
@@ -241,11 +243,12 @@ __attribute_maybe_unused__ static void test_analyze(test_t test[static 1]) {
     test_destroy(&test);                                                       \
   })
 
-__attribute_maybe_unused__ static void TEST_CLEANUP(void) {
+__attribute_maybe_unused__ static int TEST_CLEANUP(void) {
   for (uint32_t i = 0; i < test_str_factory.to_free.length; i += 1) {
     free(test_str_factory.to_free.buffer[i]);
   }
   free(test_str_factory.to_free.buffer);
+  return test_status;
 }
 
 #endif // BROKEN_UNIT_H
